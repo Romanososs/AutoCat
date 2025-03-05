@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.autocat"
+    namespace = "pro.aliencat.autocat"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.autocat"
+        applicationId = "pro.aliencat.autocat"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
@@ -27,7 +27,7 @@ android {
 
     buildTypes {
         release {
-            buildConfigField("String","BASE_URL", "\"https://charon.aliencat.pro:8444\"")
+            buildConfigField("String","BASE_URL", "\"https://charon.aliencat.pro:8443\"")
 
             isMinifyEnabled = false
             proguardFiles(
@@ -69,8 +69,9 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.ui)
     implementation(libs.ui.graphics)
-    implementation(libs.ui.tooling.preview)
     implementation(libs.material3)
+
+    implementation (libs.androidx.paging.compose)
 
     implementation(project.dependencies.platform(libs.koin.bom))
     implementation(libs.koin.android)
