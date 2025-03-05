@@ -33,25 +33,6 @@ data class Date(
                 now.get(Calendar.DATE) == dateTime.get(Calendar.DATE)
     }
 
-    infix fun isSameDay(other: Date): Boolean {
-        val otherDate: Calendar = Calendar.getInstance().also { it.timeInMillis = other.time }
-        return otherDate.get(Calendar.YEAR) == dateTime.get(Calendar.YEAR) &&
-                otherDate.get(Calendar.MONTH) == dateTime.get(Calendar.MONTH) &&
-                otherDate.get(Calendar.DATE) == dateTime.get(Calendar.DATE)
-    }
-
-    infix fun isSameWeek(other: Date): Boolean {
-        val otherDate: Calendar = Calendar.getInstance().also { it.timeInMillis = other.time }
-        return otherDate.get(Calendar.YEAR) == dateTime.get(Calendar.YEAR) &&
-                otherDate.get(Calendar.WEEK_OF_MONTH) == dateTime.get(Calendar.WEEK_OF_MONTH)
-    }
-
-    infix fun isSameMonth(other: Date): Boolean {
-        val otherDate: Calendar = Calendar.getInstance().also { it.timeInMillis = other.time }
-        return otherDate.get(Calendar.YEAR) == dateTime.get(Calendar.YEAR) &&
-                otherDate.get(Calendar.MONTH) == dateTime.get(Calendar.MONTH)
-    }
-
     fun isCurrentWeek():Boolean{
         val now: Calendar = Calendar.getInstance()
         return now.get(Calendar.YEAR) == dateTime.get(Calendar.YEAR) &&
@@ -67,7 +48,7 @@ data class Date(
 
     fun toHeaderString(): String {
         return if (isToday()){
-            "Today"
+            "Today"//TODO to resources
         } else if(isYesterday()){
             "Yesterday"
         } else if(isCurrentWeek()){
@@ -83,8 +64,7 @@ data class Date(
         return defaultDateFormat.format(dateTime.time)
     }
 
-    //in seconds
-    fun getDiff(other: Date?): Long = abs(this.time - (other?.time ?: 0L))
+    fun millisec(): Long = time
 
     operator fun minus(other: Date): Date {
         return Date(this.time - other.time)
@@ -93,15 +73,15 @@ data class Date(
     object DateSerializer : KSerializer<Date> {
         override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
             "pro.aliencat.autocat.models.common.DateSerializer",
-            PrimitiveKind.LONG
+            PrimitiveKind.DOUBLE
         )
 
         override fun serialize(encoder: Encoder, value: Date) {
-            encoder.encodeLong(value.time)
+            encoder.encodeDouble(value.time.toDouble())
         }
 
         override fun deserialize(decoder: Decoder): Date {
-            return Date(decoder.decodeLong())
+            return Date(decoder.decodeDouble().toLong())
         }
     }
 }

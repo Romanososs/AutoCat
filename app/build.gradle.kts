@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.org.jetbrains.kotlin.plugin.serialization)
+    alias(libs.plugins.com.google.devtools.ksp)
 }
 
 android {
@@ -21,15 +22,19 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-
-        buildConfigField("String","BASE_URL", "\"https://charon.aliencat.pro:8444\"")
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += Pair("room.schemaLocation", "$projectDir/schemas")
+            }
+        }
+        buildConfigField("String", "BASE_URL", "\"https://charon.aliencat.pro:8444\"")
     }
 
     buildTypes {
         release {
-            buildConfigField("String","BASE_URL", "\"https://charon.aliencat.pro:8443\"")
+            buildConfigField("String", "BASE_URL", "\"https://charon.aliencat.pro:8443\"")
 
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -71,12 +76,10 @@ dependencies {
     implementation(libs.ui.graphics)
     implementation(libs.material3)
 
-    implementation (libs.androidx.paging.compose)
-
     implementation(project.dependencies.platform(libs.koin.bom))
     implementation(libs.koin.android)
     implementation(libs.koin.compose)
-    implementation(libs.koin.compose.viewmodel)
+    implementation(libs.koin.compose.viewmodel.navigation)
 
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.okhttp)
@@ -84,7 +87,11 @@ dependencies {
     implementation(libs.ktor.client.negotiation)
     implementation(libs.ktor.serialization)
 
-    implementation (libs.androidx.datastore.preferences)
+    implementation(libs.androidx.room.runtime)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
+    implementation(libs.androidx.datastore.preferences)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

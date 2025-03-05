@@ -20,23 +20,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import pro.aliencat.autocat.R
+import pro.aliencat.autocat.mappers.toDebugInfo
 import pro.aliencat.autocat.models.PlateNumber
 import pro.aliencat.autocat.models.Vehicle
 import pro.aliencat.autocat.models.VehicleBrand
 import pro.aliencat.autocat.models.VehicleEngine
 import pro.aliencat.autocat.models.VehicleModel
 import pro.aliencat.autocat.models.common.Date
+import pro.aliencat.autocat.dto.DebugInfoDto
 import pro.aliencat.autocat.ui.theme.AutoCatTheme
 import pro.aliencat.autocat.ui.theme.BrightRed
 import pro.aliencat.autocat.ui.theme.CustomTheme
 import pro.aliencat.autocat.ui.theme.LightBlue
 import pro.aliencat.autocat.ui.theme.Orange
+import java.util.UUID
 
 
 @Composable
 fun VehicleCellView(vehicle: Vehicle) {
     val showUpdateDate = remember(vehicle.updatedDate) {
-        (vehicle.updatedDate?.getDiff(vehicle.addedDate) ?: 0L) > 10
+        ((vehicle.updatedDate ?: Date.Empty) - vehicle.addedDate).millisec() > 10 * 1000
     }
     val plateColor = if (vehicle.unrecognized) {
         BrightRed
@@ -45,7 +48,7 @@ fun VehicleCellView(vehicle: Vehicle) {
     } else {
         CustomTheme.current.foregroundPlateColor
     }
-    Surface {//TODO мб поменять цвета, чтобы строки отличались от топбара
+    Surface {//FIXME мб поменять цвета, чтобы строки отличались от топбара
         Column {
             Column(modifier = Modifier.padding(10.dp)) {
                 Row(
@@ -54,10 +57,9 @@ fun VehicleCellView(vehicle: Vehicle) {
                         .fillMaxWidth()
                         .padding(bottom = 4.dp)
                 ) {
-                    Text(
-                        vehicle.brand?.fullName ?: "",
-                        style = MaterialTheme.typography.titleMedium
-                    )
+                    vehicle.brand?.fullName?.let {
+                        Text(it, style = MaterialTheme.typography.titleMedium)
+                    }
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -69,14 +71,14 @@ fun VehicleCellView(vehicle: Vehicle) {
                                 tint = Orange
                             )
                         }
-                        if (true) { // TODO
+                        if (vehicle.notes.isNotEmpty()) {
                             Icon(
                                 painterResource(R.drawable.chat_24dp),
                                 null,//TODO
                                 modifier = Modifier.size(16.dp),
                                 tint = LightBlue
                             )
-                            Text("2")//TODO
+                            Text(vehicle.notes.size.toString())
                         }
                     }
                 }
@@ -131,7 +133,7 @@ fun VehicleCellViewPreview2() {
 
 //TODO delete!
 val vehicleDummy = Vehicle(
-    id = " ",
+    UUID.randomUUID().toString(),
     number = PlateNumber("A456AA78"),
     currentNumber = null,
     vin1 = "",
@@ -147,6 +149,13 @@ val vehicleDummy = Vehicle(
     isJapanese = false,
     addedBy = "test@test.com",
     addedDate = Date(1617477720504),
-    updatedDate = Date(1617577720504)
+    updatedDate = Date(1617577720504),
+    emptyList(),
+    emptyList(),
+    emptyList(),
+    emptyList(),
+    emptyList(),
+    emptyList(),
+    DebugInfoDto().toDebugInfo()
 )
 

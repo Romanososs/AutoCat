@@ -1,7 +1,7 @@
 package pro.aliencat.autocat.paging
 
-data class PagingState(
-    val refresh: PageLoadState = PageLoadState.NotLoading,
-    val preload: PageLoadState = PageLoadState.NotLoading,
-    val append: PageLoadState = PageLoadState.NotLoading
+data class PagingState<T>(
+    val totalItems: Int = 0,
+    val state: PagingLoadState = PagingLoadState(),
+    val pages: List<Page<T>> = emptyList()
 )

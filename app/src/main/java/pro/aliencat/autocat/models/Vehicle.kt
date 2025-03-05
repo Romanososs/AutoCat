@@ -2,6 +2,8 @@ package pro.aliencat.autocat.models
 
 import kotlinx.serialization.Serializable
 import pro.aliencat.autocat.models.common.Date
+import java.util.Calendar
+import java.util.UUID
 
 @Serializable
 data class Vehicle(
@@ -22,10 +24,46 @@ data class Vehicle(
     val addedBy: String?,
     val addedDate: Date,
     val updatedDate: Date?,
+    val photos: List<VehiclePhoto>,
+    val ownershipPeriods: List<VehicleOwnershipPeriod>,
+    val events: List<VehicleEvent>,
+    val osagoContracts: List<Osago>,
+    val ads: List<VehicleAd>,
+    val notes: List<VehicleNote>,
+    val debugInfo: DebugInfo?,
 
     val synchronized: Boolean = true,
-){
+) {
     val unrecognized: Boolean = brand == null
-    val outdated: Boolean = number != currentNumber
+    val outdated: Boolean = currentNumber != null && number != currentNumber
 
+    constructor(number: String, addedDate: Date = Date(Calendar.getInstance().timeInMillis)) : this(
+        UUID.randomUUID().toString(),
+        PlateNumber(number),
+        null,
+        "",
+        null,
+        "",
+        "",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        addedDate,
+        addedDate,
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        emptyList(),
+        null,
+        false
+    ) {
+
+    }
 }

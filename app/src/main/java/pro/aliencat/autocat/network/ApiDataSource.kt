@@ -2,7 +2,7 @@ package pro.aliencat.autocat.network
 
 import pro.aliencat.autocat.BuildConfig
 import pro.aliencat.autocat.models.common.ErrorType
-import pro.aliencat.autocat.models.dto.EmailAuthDto
+import pro.aliencat.autocat.dto.EmailAuthDto
 import pro.aliencat.autocat.storage.PreferencesDataSource
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -24,11 +24,14 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import pro.aliencat.autocat.models.common.Result
-import pro.aliencat.autocat.models.dto.VehicleDto
-import pro.aliencat.autocat.models.dto.VehiclePageDto
-import pro.aliencat.autocat.ui.screens.search.model.SearchFilter
+import pro.aliencat.autocat.dto.VehicleDto
+import pro.aliencat.autocat.dto.VehicleEventDto
+import pro.aliencat.autocat.dto.VehicleNoteDto
+import pro.aliencat.autocat.dto.VehiclePageDto
+import pro.aliencat.autocat.ui.search.model.SearchFilter
 
 interface ApiDataSource {
     //User
@@ -36,8 +39,14 @@ interface ApiDataSource {
     suspend fun login(login: String, password: String): Result<EmailAuthDto>
 
     //Vehicle
+    suspend fun checkVehicle(number: String, notes: List<VehicleNoteDto>, events: List<VehicleEventDto>, isUpdate: Boolean = false): Result<VehicleDto>
     suspend fun getReport(number: String): Result<VehicleDto>
     suspend fun getVehiclesPage(filter: SearchFilter, pageToken: String? = null, pageSize: Int = 50): Result<VehiclePageDto>
+    suspend fun getBrands(): Result<List<String>>
+    suspend fun getModels(brand: String): Result<List<String>>
+    suspend fun getColors(): Result<List<String>>
+    suspend fun getYears(): Result<List<Int>>
+//    suspend fun getRegions(): Result<List<VehicleRegion>>
 }
 
 class KtorApiDataSource(
@@ -46,7 +55,6 @@ class KtorApiDataSource(
     preferencesDataSource: PreferencesDataSource,
 ) : ApiDataSource {
     private val scope = CoroutineScope(Dispatchers.IO)
-
     private val baseUrl = BuildConfig.BASE_URL
     private val user = preferencesDataSource.userFlow
         .stateIn(scope, SharingStarted.Eagerly, null)
@@ -60,6 +68,20 @@ class KtorApiDataSource(
         return makePostRequest<EmailAuthDto>("/user/login", buildJsonObject {
             put("email", login)
             put("password", password)
+        })
+    }
+
+    override suspend fun checkVehicle(number: String, notes: List<VehicleNoteDto>, events: List<VehicleEventDto>, isUpdate: Boolean): Result<VehicleDto> {
+        //TODO add fb token
+        return makePostRequest<VehicleDto>("/vehicles/check", buildJsonObject {
+            put("number", number)
+            put("forceUpdate", isUpdate)
+            if (notes.isNotEmpty()){
+                put("notes", json.encodeToJsonElement(notes))
+            }
+            if (events.isNotEmpty()){
+                put("events", json.encodeToJsonElement(events))
+            }
         })
     }
 
@@ -79,6 +101,22 @@ class KtorApiDataSource(
         if (filter.numberQuery.isNotBlank()) params["query"] = filter.numberQuery
         pageToken?.let { params.put("pageToken", it) }
         return makeGetRequest<VehiclePageDto>("vehicles", params)
+    }
+
+    override suspend fun getBrands(): Result<List<String>> {
+        return makeGetRequest<List<String>>("vehicles/brands")
+    }
+
+    override suspend fun getModels(brand: String): Result<List<String>> {
+        return makeGetRequest<List<String>>("vehicles/models", mapOf("brand" to brand))
+    }
+
+    override suspend fun getColors(): Result<List<String>> {
+        return makeGetRequest<List<String>>("vehicles/colors")
+    }
+
+    override suspend fun getYears(): Result<List<Int>> {
+        return makeGetRequest<List<Int>>("vehicles/years")
     }
 
     private suspend inline fun <reified T> makeGetRequest(
@@ -116,10 +154,10 @@ class KtorApiDataSource(
     private suspend inline fun <reified T> responseToResult(httpResponse: HttpResponse): Result<T> {
         when (httpResponse.status.value) {
             // ...
-            in 500..599 -> return Result.Error(ErrorType.SERVER)
+            in 500..599 -> return Result.Error(ErrorType.SERVER_INTERNAL)
             else -> {
                 val apiResponse = httpResponse.body<ApiResponse>()
-                if (!apiResponse.success) return Result.Error(ErrorType.NOT_FOUND)
+                if (!apiResponse.success) return Result.Error(ErrorType.SERVER, apiResponse.error)
                 return apiResponse.data?.let {
                     Result.Success(json.decodeFromJsonElement<T>(it))
                 } ?: Result.Success(json.decodeFromString<T>("{}"))

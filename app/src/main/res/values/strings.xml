@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name" translatable="false">AutoCat</string>
+    <string name="common_error">Что-то пошло не так</string>
 </resources>

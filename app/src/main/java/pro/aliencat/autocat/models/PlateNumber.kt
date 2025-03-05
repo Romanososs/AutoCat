@@ -12,9 +12,9 @@ import kotlinx.serialization.encoding.Encoder
 data class PlateNumber(
     val number: String = ""
 ) {
-    val isValid = number.length >= 8
-    val mainPart = number.substring(0, 6)
-    val region = number.substring(6, number.length)
+    val isValid = number.length in 8.. 9
+    val mainPart =  if (number.length >= 6) number.substring(0, 6) else number.substring(0, number.length)
+    val region = if (number.length >= 7) number.substring(6, number.length) else ""
 
     override fun toString(): String {
         return number
